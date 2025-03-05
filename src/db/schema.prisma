@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          String   @id
+  author      String
+  content     String
+  type        String
+  timestamp   DateTime
+  likes       Int      @default(0)
+  comments    Int      @default(0)
+  shares      Int      @default(0)
+  tribeId     String
+  metadata    Json
+  stats       Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isDeleted   Boolean  @default(false)
+
+  // Blockchain data
+  blockchainId      Int      @unique
+  blockchainTxHash  String?
+  isConfirmed       Boolean  @default(false)
+  confirmedAt       DateTime?
+
+  @@index([tribeId])
+  @@index([author])
+  @@index([blockchainId])
+}
+
+model PostInteraction {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  type      String   // "LIKE", "COMMENT", "SHARE", "SAVE"
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId, type])
+  @@index([postId])
+  @@index([userId])
+}
+
+model PostCache {
+  key       String   @id
+  value     Json
+  expiresAt DateTime
+
+  @@index([expiresAt])
+} 

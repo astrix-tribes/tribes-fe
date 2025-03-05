@@ -1,0 +1,16 @@
+export enum ErrorType {
+  CONNECTION_ERROR = 'CONNECTION_ERROR',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  CONTRACT_ERROR = 'CONTRACT_ERROR',
+  BLOCKCHAIN_ERROR = 'BLOCKCHAIN_ERROR',
+  ALREADY_EXISTS = 'ALREADY_EXISTS',
+  NOT_FOUND = 'NOT_FOUND',
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  UNKNOWN = 'UNKNOWN'
+}
+
+export interface ErrorDetails {
+  type: ErrorType;
+  message: string;
+  details?: any;
+} 

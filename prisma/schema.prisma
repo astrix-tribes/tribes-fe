@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String           @id
+  address       String           @unique
+  username      String?          @unique
+  bio           String?
+  avatar        String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  posts         Post[]           @relation("UserPosts")
+  interactions  PostInteraction[] @relation("UserInteractions")
+  comments      Comment[]        @relation("UserComments")
+  likes         Like[]           @relation("UserLikes")
+  ownedTribes   Tribe[]         @relation("TribeOwner")
+  memberTribes  Tribe[]         @relation("TribeMembers")
+
+  @@map("users")
+}
+
+model Tribe {
+  id          String    @id
+  name        String
+  description String?
+  avatar      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  ownerId     String
+  owner       User      @relation("TribeOwner", fields: [ownerId], references: [id])
+  members     User[]    @relation("TribeMembers")
+  posts       Post[]    @relation("TribePosts")
+  topics      Topic[]   @relation("TribeTopics")
+
+  @@map("tribes")
+}
+
+model Topic {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tribeId     String
+  tribe       Tribe     @relation("TribeTopics", fields: [tribeId], references: [id])
+  posts       Post[]    @relation("TopicPosts")
+}
+
+model Post {
+  id               String           @id
+  authorId         String
+  author           User             @relation("UserPosts", fields: [authorId], references: [id])
+  content         String
+  type            String
+  tribeId         String
+  tribe           Tribe            @relation("TribePosts", fields: [tribeId], references: [id])
+  topics          Topic[]          @relation("TopicPosts")
+  metadata        Json?
+  blockchainId    Int?             @unique
+  blockchainTxHash String?
+  isConfirmed     Boolean          @default(false)
+  confirmedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime?        @updatedAt
+  interactions    PostInteraction[] @relation("PostInteractions")
+  comments        Comment[]        @relation("PostComments")
+  likes           Like[]           @relation("PostLikes")
+
+  @@index([authorId])
+  @@index([tribeId])
+  @@index([blockchainId])
+  @@map("posts")
+}
+
+model PostInteraction {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  type      String
+  createdAt DateTime @default(now())
+  post      Post     @relation("PostInteractions", fields: [postId], references: [id])
+  user      User     @relation("UserInteractions", fields: [userId], references: [id])
+
+  @@index([postId])
+  @@index([userId])
+  @@map("post_interactions")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorId  String
+  author    User     @relation("UserComments", fields: [authorId], references: [id])
+  postId    String
+  post      Post     @relation("PostComments", fields: [postId], references: [id])
+
+  @@index([authorId])
+  @@index([postId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation("UserLikes", fields: [userId], references: [id])
+  postId    String
+  post      Post     @relation("PostLikes", fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+}
+
+model PostCache {
+  key       String   @id
+  value     Json
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+model IndexerState {
+  id              Int      @id @default(autoincrement())
+  chainId         Int      @unique
+  lastIndexedBlock BigInt
+  lastSyncTime    DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("indexer_states")
+}
+
+model BlockEvent {
+  id              Int      @id @default(autoincrement())
+  blockNumber     BigInt
+  transactionHash String
+  eventName       String
+  eventData       Json
+  processed       Boolean  @default(false)
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([blockNumber])
+  @@index([processed])
+  @@map("block_events")
+}

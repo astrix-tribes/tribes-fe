@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base colors - these will be overridden by theme.ts */
+    --monad-green: #4ADE80;
+    --monad-dark-green: #22c55e;
+    --monad-bg: #0F2416;
+    --monad-bg-rgb: 15, 36, 22;
+    --fuse-blue: #1E88FA;
+    --fuse-gold: #F9C846;
+    --fuse-dark-blue: #0D2B47;
+    --fuse-bg: #0A1F35;
+    --fuse-bg-rgb: 10, 31, 53;
+    --text-primary: #FBFAF9;
+    --text-secondary: rgba(251, 250, 249, 0.7);
+    --text-disabled: rgba(251, 250, 249, 0.5);
+    --success-main: #22c55e;
+    --error-main: #ef4444;
+    
+    /* Chain colors - default to Monad */
+    --chain-primary: var(--monad-green);
+    --chain-secondary: var(--monad-dark-green);
+    --chain-bg: var(--monad-bg);
+    --chain-bg-rgb: var(--monad-bg-rgb);
+    --chain-accent: rgba(74, 222, 128, 0.2);
+  }
+
+  body {
+    background-color: var(--chain-bg);
+    color: var(--text-primary);
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+  }
+
+  .btn-primary {
+    @apply bg-theme-primary text-black hover:bg-opacity-90;
+  }
+
+  .btn-secondary {
+    @apply bg-theme-primary/5 text-text-primary hover:bg-theme-primary/10;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 bg-black/20 rounded-lg text-text-primary 
+           placeholder-text-disabled focus:outline-none focus:ring-2 focus:ring-theme-primary
+           transition-colors;
+  }
+  
+  .card {
+    background-color: var(--chain-bg, #000);
+    opacity: 0.8;
+    @apply rounded-lg shadow-sm;
+  }
+  
+  .divider {
+    @apply h-px w-full bg-white/5;
+  }
+} 
