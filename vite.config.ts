@@ -3,6 +3,7 @@ import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+// @ts-ignore - Ignore the missing type declaration
 import eslint from 'vite-plugin-eslint';
 
 const __filename = fileURLToPath(import.meta.url);

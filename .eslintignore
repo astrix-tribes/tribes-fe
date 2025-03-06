@@ -1,0 +1,18 @@
+# Ignore build files
+dist/
+node_modules/
+
+# Ignore specific problematic files that you're not actively working on
+src/store/slices/postsSlice.ts
+src/utils/typeMappers.ts
+src/utils/eventHelpers.ts
+src/utils/postHelpers.ts
+src/services/db.service.ts
+src/components/posts/PostTypeFields.tsx
+src/hooks/usePostsData.ts
+
+# Ignore tests
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx 

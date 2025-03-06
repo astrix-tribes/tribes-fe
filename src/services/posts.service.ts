@@ -1186,8 +1186,8 @@ export class PostsService {
     }
   }
 
-  public mapBlockchainPostToUIPost(post: any): Post {
-    if (!post || (!Array.isArray(post) && typeof post !== 'object')) {
+  public async mapBlockchainPostToUIPost(blockchainPost: any): Promise<Post | null> {
+    if (!blockchainPost || (!Array.isArray(blockchainPost) && typeof blockchainPost !== 'object')) {
       console.info('[Blockchain] Invalid post data received');
           return null;
         }
@@ -1195,7 +1195,7 @@ export class PostsService {
     try {
       let metadata;
       try {
-        metadata = typeof post[3] === 'string' ? JSON.parse(post[3]) : post[3];
+        metadata = typeof blockchainPost[3] === 'string' ? JSON.parse(blockchainPost[3]) : blockchainPost[3];
         
         // If metadata is a string (which can happen with blockchain data), parse it again
         if (typeof metadata === 'string') {
@@ -1213,8 +1213,8 @@ export class PostsService {
       }
 
       const postType = this.getPostType(metadata.type || PostType.TEXT);
-      const author = post[1] || '0x0000000000000000000000000000000000000000';
-      const tribeId = Number(post[2]);
+      const author = blockchainPost[1] || '0x0000000000000000000000000000000000000000';
+      const tribeId = Number(blockchainPost[2]);
 
       // Only return null if essential data is missing
       if (!author || tribeId === undefined) {
@@ -1223,14 +1223,14 @@ export class PostsService {
       }
 
       const post: Post = {
-        id: post[0]?.toString() || '0',
+        id: blockchainPost[0]?.toString() || '0',
         author: author as `0x${string}`,
         content: metadata.content || '',
         type: postType,
         createdAt: metadata.createdAt ? new Date(metadata.createdAt).getTime() : Date.now(),
         tribeId,
         stats: {
-          likeCount: Number(post[6]) || 0,
+          likeCount: Number(blockchainPost[6]) || 0,
           commentCount: 0,
           shareCount: 0,
           viewCount: 0,
