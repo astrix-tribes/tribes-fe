@@ -24,9 +24,11 @@ export const createBlockchainPost = async (
   try {
     // First, prepare the post metadata for blockchain storage
     const metadata = JSON.stringify(preparePostMetadata(params));
+    console.log(`[createBlockchainPost]: metadata: ${metadata}`);
     
     // Use blockchain utility to send the transaction
     const tribeId = parseInt(params.tribeId);
+    console.log(`[createBlockchainPost]: tribeId: ${tribeId}`);
     
     // Call the postMinter contract's createPost function
     const hash = await blockchain.createTribePost({
@@ -36,7 +38,8 @@ export const createBlockchainPost = async (
       content: params.content,
       // No longer need options since we're using the postMinter contract
     });
-    
+
+    console.log(`[createBlockchainPost]: Post created with hash: ${hash}`);
     // Generate a temporary post ID until we get the real one from event
     const tempPostId = `post-${Date.now()}`;
     
@@ -257,29 +260,29 @@ export const likePost = async (
 };
 
 // Add comment to a post
-export const commentOnPost = async (
-  tribeId: number,
-  postId: string,
-  comment: string
-): Promise<`0x${string}`> => {
-  try {
-    return await blockchain.commentOnPost(tribeId, postId, comment);
-  } catch (error) {
-    console.error('Error commenting on post:', error);
-    throw error;
-  }
-};
+// export const commentOnPost = async (
+//   tribeId: number,
+//   postId: string,
+//   comment: string
+// ): Promise<`0x${string}`> => {
+//   try {
+//     return await blockchain.commentOnPost(tribeId, postId, comment);
+//   } catch (error) {
+//     console.error('Error commenting on post:', error);
+//     throw error;
+//   }
+// };
 
 // Update post metadata (for editing posts)
-export const updatePostMetadata = async (
-  tribeId: number,
-  postId: string,
-  metadata: Record<string, any>
-): Promise<`0x${string}`> => {
-  try {
-    return await blockchain.updatePostMetadata(tribeId, postId, JSON.stringify(metadata));
-  } catch (error) {
-    console.error('Error updating post metadata:', error);
-    throw error;
-  }
-}; 
+// export const updatePostMetadata = async (
+//   tribeId: number,
+//   postId: string,
+//   metadata: Record<string, any>
+// ): Promise<`0x${string}`> => {
+//   try {
+//     return await blockchain.updatePostMetadata(tribeId, postId, JSON.stringify(metadata));
+//   } catch (error) {
+//     console.error('Error updating post metadata:', error);
+//     throw error;
+//   }
+// }; 

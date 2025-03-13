@@ -1,4 +1,4 @@
-import { MONAD_DEVNET_DECIMAL, MONAD_NETWORK_CONFIG, NETWORK_ERRORS } from '../constants/networks'
+import { MONAD_TESTNET_DECIMAL, MONAD_NETWORK_CONFIG, NETWORK_ERRORS } from '../constants/networks'
 
 const LAST_NETWORK_KEY = 'last_selected_network'
 
@@ -6,7 +6,7 @@ const LAST_NETWORK_KEY = 'last_selected_network'
  * Check if the current network is Monad Devnet
  */
 export const isMonadNetwork = (chainId?: number): boolean => {
-  return chainId === MONAD_DEVNET_DECIMAL
+  return chainId === MONAD_TESTNET_DECIMAL
 }
 
 /**

@@ -362,7 +362,7 @@ export const TribeCreationForm: React.FC<TribeCreationFormProps> = ({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               placeholder="Enter tribe name"
               required
             />
@@ -379,7 +379,7 @@ export const TribeCreationForm: React.FC<TribeCreationFormProps> = ({
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] text-black"
               placeholder="What is this tribe about?"
             />
           </div>
@@ -397,7 +397,7 @@ export const TribeCreationForm: React.FC<TribeCreationFormProps> = ({
                 type="text"
                 value={avatar}
                 onChange={(e) => setAvatar(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="https://example.com/avatar.png"
               />
             </div>
@@ -413,7 +413,7 @@ export const TribeCreationForm: React.FC<TribeCreationFormProps> = ({
                 type="text"
                 value={coverImage}
                 onChange={(e) => setCoverImage(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="https://example.com/cover.png"
               />
             </div>
@@ -534,7 +534,7 @@ export const TribeCreationForm: React.FC<TribeCreationFormProps> = ({
                 value={adminInput}
                 onChange={(e) => setAdminInput(e.target.value)}
                 onKeyDown={handleAdminInputKeyDown}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="Enter username to add admin"
               />
               <button

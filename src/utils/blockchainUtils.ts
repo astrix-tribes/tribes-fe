@@ -3,7 +3,7 @@
  */
 import { type Log, type PublicClient, type Abi, type TransactionReceipt } from 'viem';
 import { getPublicClient as viemGetPublicClient, getContracts as configGetContracts } from '../config/contracts';
-import { SUPPORTED_CHAINS, MONAD_DEVNET } from '../constants/networks';
+import { SUPPORTED_CHAINS, MONAD_TESTNET } from '../constants/networks';
 import { getEthereumProvider } from './ethereum';
 import { type Chain } from 'viem';
 import { ZeroAddress } from 'ethers';
@@ -33,7 +33,7 @@ export const getCurrentChainId = async (): Promise<number> => {
     const provider = await getEthereumProvider();
     if (!provider) {
       console.warn('No provider available, using Monad Devnet');
-      return MONAD_DEVNET.id;
+      return MONAD_TESTNET.id;
     }
     
     // Different providers have different methods to get chain ID
@@ -48,7 +48,7 @@ export const getCurrentChainId = async (): Promise<number> => {
         const isSupported = SUPPORTED_CHAINS.some(chain => chain.id === chainId);
         if (!isSupported) {
           console.warn(`Chain ID ${chainId} not supported, using Monad Devnet`);
-          return MONAD_DEVNET.id;
+          return MONAD_TESTNET.id;
         }
         
         return chainId;
@@ -70,11 +70,11 @@ export const getCurrentChainId = async (): Promise<number> => {
     // This was causing the TypeError: provider.getNetwork is not a function error
     
     console.warn('Could not determine chain ID, using Monad Devnet');
-    return MONAD_DEVNET.id;
+    return MONAD_TESTNET.id;
   } catch (error) {
     console.error('Error getting current chain ID:', error);
     // Return Monad Devnet as default
-    return MONAD_DEVNET.id;
+    return MONAD_TESTNET.id;
   }
 };
 
@@ -181,14 +181,25 @@ export const isZeroAddress = (address: string): boolean => {
  * @param params Contract parameters
  * @returns Contract instance
  */
-export function getContract(params: { address: string; abi: Abi }): {
+export async function getContract(params: { address: string; abi: Abi }): Promise<{
   address: string;
   abi: Abi;
   read: Record<string, ContractReadFunction>;
   write: Record<string, ContractWriteFunction>;
-} {
+}> {
   try {
     const publicClient = getPublicClient();
+    
+    // Get the current chain ID and verify
+    const chainId = await getCurrentChainId();
+    console.log('Current chain ID:', chainId);
+    console.log('Expected chain ID for this contract:', 1264453517); // Replace with your expected chain ID
+
+    // Check if we're on the correct network
+    if (chainId !== 1264453517) { // Replace with your expected chain ID
+      console.error('Wrong network. Please switch to the correct network.');
+      throw new Error('Wrong network');
+    }
     
     // Create a contract instance with read capabilities
     return {
@@ -361,51 +372,60 @@ export const blockchain = {
         throw new Error('No signer available for transaction');
       }
       
-      // Prepare metadata
-      const metadata = JSON.stringify({
-        content: params.content || '',
-        title: params.title || '',
-        type: params.type || 'TEXT',
-        createdAt: new Date().toISOString(),
-        // ...(params.pollDetails && { poll: params.pollDetails }),
-        // ...(params.eventDetails && { event: params.eventDetails }),
-        // ...(params.mediaContent && { media: params.mediaContent })
-      });
-      
-      console.log('Post metadata:', metadata);
+      console.log('Provider:', provider);
+      console.log('Signer:', signer);
       
       // Get the contract instance
       const { ethers } = await import('ethers');
       const { ABIS } = await import('../config/abis');
       
+      // Log the contract address and ABI to verify
+      console.log('Contract address:', addresses.POST_MINTER);
+      console.log('Contract ABI first few methods:', ABIS.PostMinter.slice(0, 3));
+
       // Create contract with signer only
       const contractWithSigner = new ethers.Contract(addresses.POST_MINTER, ABIS.PostMinter, signer);
-
       console.log('Contract with signer:', contractWithSigner);
 
-      // Create post transaction using the write function directly
-      console.log('Sending createPost transaction with params:', {
-        tribeId: params.tribeId,
-        metadata,
-        isGated: params.isGated || false,
-        collectibleContract: params.collectibleContract || '0x0000000000000000000000000000000000000000',
-        collectibleId: params.collectibleId || 0
+      // Get user address
+      const userAddress = await signer.getAddress();
+      console.log('User address:', userAddress);
+      
+      // Define the tribe ID to use
+      const tribeId = params.tribeId ? Number(params.tribeId) : 1;
+      console.log(`Using tribe ID: ${tribeId}`);
+      
+      // Check if tribe exists and join if needed
+      // await ensureTribeMembership(contractWithSigner, tribeId, userAddress);
+      console.log('Ensuring tribe parmas...', params);
+      // Prepare metadata with required fields
+      const metadata = JSON.stringify({
+        content: params.content || 'Sample content',
+        title: params.title || 'Untitled Post',
+        type: params.postType,
+        createdAt: new Date().toISOString(),
+        ...(params.postType === 'event' && { ...params })
       });
-
+      
+      console.log('Post metadata:', metadata);
+      
+      // Send the transaction
+      console.log('Sending createPost transaction...');
       const tx = await contractWithSigner.createPost(
-        params.tribeId,
+        tribeId,
         metadata,
-        params.isGated || false,
-        params.collectibleContract || '0x0000000000000000000000000000000000000000',
-        params.collectibleId || 0
+        false, // isGated
+        '0x0000000000000000000000000000000000000000', // collectibleContract
+        0, // collectibleId
+        {
+          gas: 1000000
+        }
       );
-
-      console.log('Post creation transaction sent:', tx.hash);
-
-      // Wait for transaction confirmation
+      
+      console.log('Transaction sent:', tx.hash);
       const receipt = await tx.wait();
-      console.log('Post creation confirmed in block:', receipt.blockNumber);
-
+      console.log('Transaction receipt:', receipt);
+      
       return tx.hash as `0x${string}`;
     } catch (error) {
       console.error('Error creating tribe post:', error);
@@ -510,147 +530,85 @@ export const blockchain = {
       
       // This should make the actual contract call to comment on a post
       // For now, let's return a hash that matches the expected type
-      return `0x${Math.random().toString(16).substring(2).padStart(64, '0')}` as `0x${string}`;
+      return `0x${Math.random().toString(16).substring(2).padStart(64, '0')}`
     } catch (error) {
       console.error('Error commenting on post:', error);
       throw error;
     }
   },
-  
-  // Update post metadata
-  updatePostMetadata: async (tribeId: number, postId: string, metadata: string) => {
-    try {
-      console.log(`Updating metadata for post ${postId} in tribe ${tribeId}`);
+};
+
+/**
+ * Ensure the user is a member of the specified tribe
+ * @param contract The contract instance
+ * @param tribeId The tribe ID
+ * @param userAddress The user's address
+ */
+// async function ensureTribeMembership(contract, tribeId, userAddress) {
+//   // try {
+//   //   console.log(`Checking membership for tribe ${tribeId}...`);
+    
+//   //   // Check if tribe exists
+//   //   // const tribeExists = await contract.tribeExists(tribeId);
+//   //   // console.log(`Tribe ${tribeId} exists:`, tribeExists);
+    
+//   //   if (!tribeExists) {
+//   //     console.log(`Tribe ${tribeId} does not exist, creating it...`);
       
-      // Get the necessary contracts and client
-      const chainId = await getCurrentChainId();
-      const contracts = getContracts(chainId);
-      const client = getPublicClient(chainId);
+//   //     // Create the tribe if it doesn't exist
+//   //     if (typeof contract.createTribe === 'function') {
+//   //       const createTribeTx = await contract.createTribe(
+//   //         `Tribe ${tribeId}`,
+//   //         `A tribe with ID ${tribeId}`,
+//   //         false, // isPrivate
+//   //         '0x0000000000000000000000000000000000000000', // collectibleContract
+//   //         0, // collectibleId
+//   //         {
+//   //           gasLimit: 500000
+//   //         }
+//   //       );
+        
+//   //       console.log('Create tribe transaction sent:', createTribeTx.hash);
+//   //       const createReceipt = await createTribeTx.wait();
+//   //       console.log('Create tribe transaction receipt:', createReceipt);
+//   //     } else {
+//   //       throw new Error(`Cannot create tribe ${tribeId} - function not available`);
+//   //     }
+//   //   }
+    
+//   //   // Check if user is a member
+//   //   const isMember = await contract.isTribeMember(tribeId, userAddress);
+//   //   console.log(`Is member of tribe ${tribeId}:`, isMember);
+    
+//   //   if (!isMember) {
+//   //     console.log(`Not a member of tribe ${tribeId}, joining...`);
       
-      // This should make the actual contract call to update post metadata
-      // For now, let's return a hash that matches the expected type
-      return `0x${Math.random().toString(16).substring(2).padStart(64, '0')}` as `0x${string}`;
-    } catch (error) {
-      console.error('Error updating post metadata:', error);
-      throw error;
-    }
-  },
-  
-  // Profile-related methods
-  getProfileByTokenId: async (tokenId: number) => {
-    try {
-      console.log(`Getting profile for token ID ${tokenId}`);
-      
-      const chainId = await getCurrentChainId();
-      const contracts = getContracts(chainId);
-      const client = getPublicClient(chainId);
-      
-      // This should make the actual contract call to get profile by token ID
-      // For now, let's return a structure compatible with what callers expect
-      
-      return {
-        tokenId: tokenId,
-        username: `user_${tokenId}`,
-        metadata: '{}',
-        owner: '0x0000000000000000000000000000000000000000',
-        profile: [`user_${tokenId}`, '{}'] // For backward compatibility
-      };
-    } catch (error) {
-      console.error('Error getting profile by token ID:', error);
-      return null;
-    }
-  },
-  
-  mintProfile: async ({ username, metadataURI }: { username: string; metadataURI: string }) => {
-    try {
-      console.log(`Minting profile for username ${username}`);
-      
-      // Get current chain ID and required contract interfaces
-      const chainId = await getCurrentChainId();
-      const contracts = getContracts(chainId);
-      const client = getPublicClient(chainId);
-      
-      // This should make the actual contract call to mint a profile
-      // For now, let's make this compatible with the expected signature from callers
-      // Return hash that matches the expected type from callers
-      return `0x${Math.random().toString(16).substring(2).padStart(64, '0')}` as `0x${string}`;
-    } catch (error) {
-      console.error('Error minting profile:', error);
-      throw error;
-    }
-  },
-  
-  updateProfile: async ({ tokenId, metadata }: { tokenId: number; metadata: string }) => {
-    try {
-      console.log(`Updating profile for token ID ${tokenId}`);
-      
-      // Get current chain ID and required contract interfaces
-      const chainId = await getCurrentChainId();
-      const contracts = getContracts(chainId);
-      const client = getPublicClient(chainId);
-      
-      // This should make the actual contract call to update a profile
-      // For now, let's make this compatible with the expected signature from callers
-      // Return hash that matches the expected type from callers
-      return `0x${Math.random().toString(16).substring(2).padStart(64, '0')}` as `0x${string}`;
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
-  },
-  
-  usernameExists: async (username: string) => {
-    try {
-      console.log(`Checking if username ${username} exists`);
-      
-      const chainId = await getCurrentChainId();
-      const contracts = getContracts(chainId);
-      const client = getPublicClient(chainId);
-      
-      // Make this a real implementation that checks if a username exists
-      // For now, let's just return a realistic value
-      return false;
-    } catch (error) {
-      console.error('Error checking if username exists:', error);
-      throw error;
-    }
-  },
-  
-  getProfileIdByUsername: async (username: string) => {
-    try {
-      console.log(`Getting profile ID for username ${username}`);
-      
-      // Original implementation to get a profile ID by username
-      // Add the actual implementation here
-      
-      return 0;
-    } catch (error) {
-      console.error('Error getting profile ID by username:', error);
-      throw error;
-    }
-  },
-  
-  getProfileByAddress: async (address: string) => {
-    try {
-      console.log(`Getting profile for address ${address}`);
-      
-      const chainId = await getCurrentChainId();
-      const contracts = getContracts(chainId);
-      const client = getPublicClient(chainId);
-      
-      // This should make the actual contract call to get profile by address
-      // For now, let's return a structure compatible with what callers expect
-      return {
-        tokenId: 1,
-        username: "user",
-        metadata: "{}",
-        owner: address,
-        // The profile property needs to match the structure expected by callers
-        profile: ["user", "{}"]
-      };
-    } catch (error) {
-      console.error('Error getting profile by address:', error);
-      return null;
-    }
-  }
-}; 
+//   //     // Join the tribe
+//   //     if (typeof contract.joinTribe === 'function') {
+//   //       const joinTx = await contract.joinTribe(tribeId, {
+//   //         gasLimit: 300000
+//   //       });
+        
+//   //       console.log('Join tribe transaction sent:', joinTx.hash);
+//   //       const joinReceipt = await joinTx.wait();
+//   //       console.log('Join tribe transaction receipt:', joinReceipt);
+        
+//   //       // Verify membership after joining
+//   //       const isMemberNow = await contract.isTribeMember(tribeId, userAddress);
+//   //       console.log(`Is member of tribe ${tribeId} now:`, isMemberNow);
+        
+//   //       if (!isMemberNow) {
+//   //         throw new Error(`Failed to join tribe ${tribeId}`);
+//   //       }
+//   //     } else {
+//   //       throw new Error(`Cannot join tribe ${tribeId} - function not available`);
+//   //     }
+//   //   }
+    
+//   //   console.log(`Successfully confirmed membership in tribe ${tribeId}`);
+//   //   return true;
+//   // } catch (error) {
+//   //   console.error(`Error ensuring tribe membership for tribe ${tribeId}:`, error);
+//   //   throw error;
+//   // }
+// }

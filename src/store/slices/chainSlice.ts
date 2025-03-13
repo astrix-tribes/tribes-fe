@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { MONAD_DEVNET } from '../../constants/networks';
+import { MONAD_TESTNET } from '../../constants/networks';
 
 interface ChainState {
   chainId: number | undefined;
@@ -12,7 +12,7 @@ const initialState: ChainState = {
   chainId: undefined,
   isCorrectNetwork: false,
   isChainSwitching: false,
-  lastValidChainId: MONAD_DEVNET.id
+  lastValidChainId: MONAD_TESTNET.id
 };
 
 const chainSlice = createSlice({

@@ -1,6 +1,6 @@
 import { PublicClient, WalletClient, createPublicClient, createWalletClient, http, custom } from 'viem';
 import { ABIS } from './abis';
-import { MONAD_DEVNET } from '../constants/networks';
+import { MONAD_TESTNET } from '../constants/networks';
 import { getCurrentChain, getContractAddresses as getAddresses } from '../constants/contracts';
 
 // Use the same interface as in constants/contracts.ts to avoid mismatches
@@ -18,12 +18,12 @@ interface ContractAddresses {
 }
 
 // Get addresses directly from constants/contracts.ts to avoid duplication
-export function getContractAddresses(chainId: number = MONAD_DEVNET.id): ContractAddresses {
+export function getContractAddresses(chainId: number = MONAD_TESTNET.id): ContractAddresses {
   return getAddresses(chainId);
 }
 
 // Get chain-specific public client
-export function getPublicClient(chainId: number = MONAD_DEVNET.id): PublicClient {
+export function getPublicClient(chainId: number = MONAD_TESTNET.id): PublicClient {
   const chain = getCurrentChain(chainId);
   return createPublicClient({
     chain,
@@ -32,7 +32,7 @@ export function getPublicClient(chainId: number = MONAD_DEVNET.id): PublicClient
 }
 
 // Get chain-specific wallet client
-export async function getWalletClient(chainId: number = MONAD_DEVNET.id): Promise<WalletClient> {
+export async function getWalletClient(chainId: number = MONAD_TESTNET.id): Promise<WalletClient> {
   const provider = window.ethereum;
   if (!provider) {
     throw new Error('No provider available');
@@ -49,7 +49,7 @@ export async function getWalletClient(chainId: number = MONAD_DEVNET.id): Promis
 }
 
 // Get chain-specific contract configurations
-export function getContracts(chainId: number = MONAD_DEVNET.id) {
+export function getContracts(chainId: number = MONAD_TESTNET.id) {
   const addresses = getContractAddresses(chainId);
   
   return {
@@ -103,7 +103,7 @@ export function getContracts(chainId: number = MONAD_DEVNET.id) {
 
 // Helper to get current chain info
 export const getCurrentChainInfo = (chainId?: number) => {
-  const chain = chainId ? getCurrentChain(chainId) : MONAD_DEVNET;
+  const chain = chainId ? getCurrentChain(chainId) : MONAD_TESTNET;
   return {
     chain,
     contracts: getContracts(chain.id),

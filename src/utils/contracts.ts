@@ -6,7 +6,7 @@ export interface ContractAddresses {
 const CHAIN_IDS = {
   ETHEREUM_MAINNET: 1,
   GOERLI: 5,
-  MONAD_DEVNET: 20143,
+  MONAD_TESTNET: 20143,
   FUSE_EMBER: 1264453517
 };
 
@@ -27,7 +27,7 @@ export function getContractAddresses(chainId: number): ContractAddresses {
       return {
         tribes: '0x1234567890123456789012345678901234567890' // Replace with actual testnet address
       };
-    case CHAIN_IDS.MONAD_DEVNET: // Monad Devnet
+    case CHAIN_IDS.MONAD_TESTNET: // Monad Devnet
       return {
         tribes: '0x16C4F870B59E55bB80A620547987Bd9302FC567d'
       };

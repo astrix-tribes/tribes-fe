@@ -4,7 +4,7 @@ import { PostsService } from '../services/posts.service';
 // import { QueueService } from '../services/queue.service';
 import { blockchain } from '../utils/blockchainUtils';
 import { TribesSDK } from '../services/TribesSDK';
-import { MONAD_DEVNET } from '../constants/networks';
+import { MONAD_TESTNET } from '../constants/networks';
 
 const INIT_TIMEOUT = 30000; // 30 seconds timeout (increased from 10 seconds)
 
@@ -45,7 +45,7 @@ async function initializeFallbackMode(): Promise<void> {
   console.log('Initializing in fallback mode...');
   
   // Initialize with default chain ID
-  const chainId = MONAD_DEVNET.id;
+  const chainId = MONAD_TESTNET.id;
   console.log('Using default chain ID:', chainId);
   
   // Initialize minimum required services 
@@ -72,7 +72,7 @@ async function initializeServices(): Promise<void> {
     console.log('Initializing client-side services');
     
     // Initialize with default chain ID first in case blockchain connection fails
-    let chainId: number = MONAD_DEVNET.id;
+    let chainId: number = MONAD_TESTNET.id;
     let indexerService = getIndexerService(chainId);
     console.log('[IndexerService] Pre-initializing with default chainId:', chainId);
     

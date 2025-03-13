@@ -32,12 +32,12 @@ style.textContent = cssVariables;
 document.head.appendChild(style);
 
 // Chain IDs
-export const MONAD_DEVNET_ID = 20143;
+export const MONAD_TESTNET_ID = 20143;
 export const FUSE_EMBER_ID = 1264453517;
 
 // Function to update chain colors based on current chain
 export const updateChainColors = (chainId: number) => {
-  if (chainId === MONAD_DEVNET_ID) {
+  if (chainId === MONAD_TESTNET_ID) {
     document.documentElement.style.setProperty('--chain-primary', 'var(--monad-green)');
     document.documentElement.style.setProperty('--chain-secondary', 'var(--monad-dark-green)');
     document.documentElement.style.setProperty('--chain-bg', 'var(--monad-bg)');

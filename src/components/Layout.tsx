@@ -10,9 +10,9 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-black">
       <Navigation onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
-      <div className="flex">
+      <div className="flex pt-2">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <main className="flex-1 pb-20 md:pb-0">
+        <main className="flex-1 pb-24 md:pb-6 px-1">
           <Outlet />
         </main>
       </div>

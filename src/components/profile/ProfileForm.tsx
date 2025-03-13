@@ -6,7 +6,7 @@ import { getWalletClient, getContracts } from '../../config/contracts';
 import { Profile } from '../../types/contracts';
 import { useWalletClient } from 'wagmi';
 import { useNetwork } from '../../hooks/useNetwork';
-import { MONAD_DEVNET, FUSE_EMBER, SUPPORTED_CHAINS } from '../../constants/networks';
+import { MONAD_TESTNET, FUSE_EMBER, SUPPORTED_CHAINS } from '../../constants/networks';
 import { useWallet } from '../../hooks/useWallet';
 import { useTribesSDK } from '../../contexts/TribesContext';
 
@@ -227,8 +227,8 @@ export function ProfileForm({ mode, existingProfile, onSuccess, onCancel, classN
     
     // Find the proper chain object from SUPPORTED_CHAINS
     const currentChain = chainId 
-      ? SUPPORTED_CHAINS.find(chain => chain.id === chainId) || MONAD_DEVNET
-      : MONAD_DEVNET;
+      ? SUPPORTED_CHAINS.find(chain => chain.id === chainId) || MONAD_TESTNET
+      : MONAD_TESTNET;
       
     console.log('[ProfileForm] Using chain:', { chainId: currentChain.id, chainName: currentChain.name });
     
@@ -410,7 +410,7 @@ export function ProfileForm({ mode, existingProfile, onSuccess, onCancel, classN
   // Add network switch handler - moved the hook call to the top level
   const handleSwitchNetwork = async () => {
     try {
-      await switchNetwork(MONAD_DEVNET.id);
+      await switchNetwork(MONAD_TESTNET.id);
       showNotification('Switching to Monad Devnet...', 'info');
     } catch (err) {
       console.error('[ProfileForm] Network switch error:', err);
@@ -446,7 +446,7 @@ export function ProfileForm({ mode, existingProfile, onSuccess, onCancel, classN
             You need to be on the Monad Devnet to create or update your profile.
             {currentChainId && (
               <span className="block mt-1">
-                Current network: Chain ID {currentChainId} / Required: Chain ID {MONAD_DEVNET.id}
+                Current network: Chain ID {currentChainId} / Required: Chain ID {MONAD_TESTNET.id}
               </span>
             )}
           </p>

@@ -76,7 +76,7 @@ export interface EventDetails {
   title: string;        // Event title
   startDate: string;    // ISO string
   endDate?: string;     // ISO string
-  location?: string;
+  location?: any;
   virtualLink?: string;
   description?: string; // Detailed event description
   
@@ -95,6 +95,7 @@ export interface EventDetails {
   // Capacity information (UI-specific)
   maxAttendees?: number;
   currentAttendees?: number;
+  perWalletLimit?: number;
   
   // Additional details
   cost?: string;
@@ -105,6 +106,7 @@ export interface EventDetails {
   // Rich content
   speakers?: EventSpeaker[];
   agenda?: EventAgendaItem[];
+  capacity?: number;
   
   // Additional fields
   rsvpLink?: string;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useChainId } from 'wagmi';
 import { getChainColorClass } from '../../utils/chain';
-import { MONAD_DEVNET_ID, FUSE_EMBER_ID } from '../../constants/theme';
+import { MONAD_TESTNET_ID, FUSE_EMBER_ID } from '../../constants/theme';
 
 /**
  * Theme Color Guide component to demonstrate proper usage of blockchain dynamic colors
@@ -84,7 +84,7 @@ const ThemeColorGuide: React.FC = () => {
             
             {/* Conditional chain-specific classes */}
             <div className={`p-4 rounded-lg ${
-              chainId === MONAD_DEVNET_ID ? 'bg-monad-green/20 text-monad-green' :
+              chainId === MONAD_TESTNET_ID ? 'bg-monad-green/20 text-monad-green' :
               chainId === FUSE_EMBER_ID ? 'bg-fuse-gold/20 text-fuse-gold' :
               'bg-gray-500/20 text-gray-500'
             }`}>
@@ -94,7 +94,7 @@ const ThemeColorGuide: React.FC = () => {
             {/* Code example */}
             <pre className="mt-2 bg-gray-800 p-2 rounded text-xs">
               {'<div className={`p-4 rounded-lg ${'}<br/>
-              {'  chainId === MONAD_DEVNET_ID ? \'bg-monad-green/20\' :'}<br/>
+              {'  chainId === MONAD_TESTNET_ID ? \'bg-monad-green/20\' :'}<br/>
               {'  chainId === FUSE_EMBER_ID ? \'bg-fuse-gold/20\' :'}<br/>
               {'  \'bg-gray-500/20\''}<br/>
               {'}`}>Chain-specific content</div>'}

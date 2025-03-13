@@ -1,4 +1,4 @@
-import { MONAD_DEVNET, FUSE_EMBER, SUPPORTED_CHAINS } from './networks';
+import { MONAD_TESTNET, FUSE_EMBER, SUPPORTED_CHAINS, MANTA_TESTNET, CHILIZ_MAINNET } from './networks';
 import { createPublicClient, createWalletClient, http, custom, Chain, PublicClient, WalletClient } from 'viem';
 
 type ContractAddresses = {
@@ -24,17 +24,42 @@ const walletClientCache = new Map<number, WalletClient>();
 
 // Contract Addresses by Chain
 export const CONTRACT_ADDRESSES: ChainAddresses = {
-  [MONAD_DEVNET.id]: {
-    ROLE_MANAGER: '0x153777B9Cb7323a911E5D3E3132B3f1158bd71BE',
-    PROFILE_NFT_MINTER: '0xFF65e7c1dD05df41e74a5b04c9958BbD661E1B0c',
-    TRIBE_CONTROLLER: '0x16C4F870B59E55bB80A620547987Bd9302FC567d',
-    COLLECTIBLE_CONTROLLER: '0x5dC8e5A38dC1edDC51aFae4FA27b7E32147D9895',
-    EVENT_CONTROLLER: '0x77B123A5dA78c9C33E28ed20aC984dF41693a024',
-    SUPER_COMMUNITY_CONTROLLER: '0x85083329E71b77430f9b7Cf7F4d17b5f9ff81290',
-    COMMUNITY_POINTS: '0x3F1F0811E2d83003e085Ba812eC7a331795032dE',
-    VOTING: '0xC27B7754950fa8554Cb588A7Aa04d406Ad639094',
+  
+  [MANTA_TESTNET.id]: {
+    ROLE_MANAGER: '0x2F86722E927f1f080AF80E943eaE45fa28C7C296',
+    PROFILE_NFT_MINTER: '0xc7B5f9BE4F716eE179674E2f055d866a797D1126',
+    TRIBE_CONTROLLER: '0x575Cc6B211b33aDA87C075AfE3bB878f6B0a8984',
+    COLLECTIBLE_CONTROLLER: '0xD750B3e3A361B701c6C53B86A425F4CC345f142d',
+    EVENT_CONTROLLER: '0x03f8E7E304dB8615207a0b6fdd02Eb2e30e89557',
+    SUPER_COMMUNITY_CONTROLLER: '0x9814514576184fB43AAD956873AE806AA811851E',
+    COMMUNITY_POINTS: '0xE05022e242778c50Be3f6b4DD156ac222A311eEb',
+    VOTING: '0x1E644d081E2a702A6D4e816D8dc04A9DBaa12Acc',
+    CONTENT_MANAGER: '0x4DAD0f1E02374CB221E8822787bbdb0b0b18B9Fb',
+    POST_MINTER: '0xA1c3162cE3515bb876Ee4928fB0FD0B20bC37f34'
+  },
+  [CHILIZ_MAINNET.id]: {
+    ROLE_MANAGER: '0x2F86722E927f1f080AF80E943eaE45fa28C7C296',
+    PROFILE_NFT_MINTER: '0xc7B5f9BE4F716eE179674E2f055d866a797D1126',
+    TRIBE_CONTROLLER: '0x575Cc6B211b33aDA87C075AfE3bB878f6B0a8984',
+    COLLECTIBLE_CONTROLLER: '0xD750B3e3A361B701c6C53B86A425F4CC345f142d',
+    EVENT_CONTROLLER: '0x03f8E7E304dB8615207a0b6fdd02Eb2e30e89557',
+    SUPER_COMMUNITY_CONTROLLER: '0x9814514576184fB43AAD956873AE806AA811851E',
+    COMMUNITY_POINTS: '0xE05022e242778c50Be3f6b4DD156ac222A311eEb',
+    VOTING: '0x1E644d081E2a702A6D4e816D8dc04A9DBaa12Acc',
+    CONTENT_MANAGER: '0x4DAD0f1E02374CB221E8822787bbdb0b0b18B9Fb',
+    POST_MINTER: '0xA1c3162cE3515bb876Ee4928fB0FD0B20bC37f34'
+  },
+  [MONAD_TESTNET.id]: {
+    ROLE_MANAGER: "0xd1e6F54a47705659856cdCf1De6bCf992668f7B8",
     CONTENT_MANAGER: '0x4c1B99D32A3671a35c3229cb3647d080CFb94380',
-    POST_MINTER: '0x5053a6C1c144Db7F876F7b898943b831cf3Fd817'
+    PROFILE_NFT_MINTER: "0xb5D7997bE927511328a983387A0B8c08A78C2Ff6",
+    TRIBE_CONTROLLER: "0x90628Ed5C38C5a902782911Be5b4C811A7bEf4F4",
+    COLLECTIBLE_CONTROLLER: "0xE82448DEbBF0cD369912d58aA68F7b2371E24846",
+    POST_MINTER: "0xb4a6E494a86679de41Bb18De850C1a497066ec1e",
+    VOTING: "0x014656936ea2C31493Ce1374328819370D2443DE",
+    COMMUNITY_POINTS: "0x8D682a9917c2d5F2b63Ede57D5d046ff4e08c27E",
+    EVENT_CONTROLLER: "0x68Cb873203dc5Af0DbAC292eF94f83054Bc70fc8",
+    SUPER_COMMUNITY_CONTROLLER: "0xe1B158fc958C3F8Af64949e40d973ebA32462E1F",
   },
   [FUSE_EMBER.id]: {
     ROLE_MANAGER: '0x661C2B7f1C3EC1ACEeA2c02818459061D40823bD',
@@ -48,6 +73,7 @@ export const CONTRACT_ADDRESSES: ChainAddresses = {
     CONTENT_MANAGER: '0x8fa7A72aAB8595E0EA48bDd0A26e7c1b7F72B362',
     POST_MINTER: '0x58a1F6A010Eb711f5e564C073fC24bDa4AFA2392'
   }
+
 } as const;
 
 // Helper to get contract addresses for current chain
@@ -55,7 +81,7 @@ export const getContractAddresses = (chainId: number): ContractAddresses => {
   const addresses = CONTRACT_ADDRESSES[chainId];
   if (!addresses) {
     console.warn(`No contract addresses found for chain ${chainId}, falling back to Monad Devnet`);
-    return CONTRACT_ADDRESSES[MONAD_DEVNET.id];
+    return CONTRACT_ADDRESSES[MONAD_TESTNET.id];
   }
   return addresses;
 };
@@ -65,13 +91,13 @@ export const getCurrentChain = (chainId: number): Chain => {
   const chain = SUPPORTED_CHAINS.find(chain => chain.id === chainId);
   if (!chain) {
     console.warn(`Chain ${chainId} not supported, falling back to Monad Devnet`);
-    return MONAD_DEVNET;
+    return MONAD_TESTNET;
   }
   return chain;
 };
 
 export const getPublicClient = (chainId?: number): PublicClient => {
-  const chain = chainId ? getCurrentChain(chainId) : MONAD_DEVNET;
+  const chain = chainId ? getCurrentChain(chainId) : MONAD_TESTNET;
   const cached = publicClientCache.get(chain.id);
   
   if (cached) {
@@ -93,7 +119,7 @@ export const getPublicClient = (chainId?: number): PublicClient => {
 export const getWalletClient = (chainId?: number): WalletClient => {
   if (!window.ethereum) throw new Error('No ethereum provider found');
   
-  const chain = chainId ? getCurrentChain(chainId) : MONAD_DEVNET;
+  const chain = chainId ? getCurrentChain(chainId) : MONAD_TESTNET;
   const cached = walletClientCache.get(chain.id);
   
   if (cached) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { RootRoute } from './components/RootRoute'
@@ -17,6 +17,11 @@ import { updateChainColors } from './constants/theme'
 import { initializeApp } from './utils/initApp'
 import { TribesSDK } from './services/TribesSDK'
 import { TribesProvider } from './contexts/TribesContext'
+import LoadingScreen from './components/LoadingScreen'
+
+// Lazy load routes
+const DashboardLazy = lazy(() => import('./screens/Dashboard'));
+// const CreateProfile = lazy(() => import('./screens/CreateProfile'))
 
 const App: React.FC = () => {
   const chainId = useChainId()
@@ -58,6 +63,19 @@ const App: React.FC = () => {
     init();
   }, [chainId]);
 
+  useEffect(() => {
+    console.log('App mounted');
+    
+    // Check for connection issues
+    window.addEventListener('error', (event) => {
+      console.error('Global error:', event.error);
+    });
+    
+    return () => {
+      window.removeEventListener('error', () => {});
+    };
+  }, []);
+
   if (isInitializing) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -69,27 +87,29 @@ const App: React.FC = () => {
   return (
     <TribesProvider sdk={sdk} isInitialized={isInitialized}>
       <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<RootRoute />} />
-          <Route path="/connect" element={<WalletConnect />} />
-          <Route path="/create-profile" element={<UsernameAvatarSetup />} />
-          <Route path="/username-setup" element={<UsernameAvatarSetup />} />
-          
-          {/* Protected Routes */}
-          <Route element={<AuthGuard><Layout /></AuthGuard>}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/tribes" element={<Tribes />} />
-            <Route path="/tribes/create" element={<CreateTribe />} />
-            <Route path="/tribes/:tribeId" element={<TribeDetails />} />
-            <Route path="/tribes/:tribeId/topics/:topicId" element={<TopicDetails />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-          </Route>
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<RootRoute />} />
+            <Route path="/connect" element={<WalletConnect />} />
+            <Route path="/create-profile" element={<UsernameAvatarSetup />} />
+            <Route path="/username-setup" element={<UsernameAvatarSetup />} />
+            
+            {/* Protected Routes */}
+            <Route element={<AuthGuard><Layout /></AuthGuard>}>
+              <Route path="/dashboard" element={<DashboardLazy />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/tribes" element={<Tribes />} />
+              <Route path="/tribes/create" element={<CreateTribe />} />
+              <Route path="/tribes/:tribeId" element={<TribeDetails />} />
+              <Route path="/tribes/:tribeId/topics/:topicId" element={<TopicDetails />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+            </Route>
 
-          {/* Catch all redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+            {/* Catch all redirect */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
       </Router>
     </TribesProvider>
   )

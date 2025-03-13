@@ -1,5 +1,10 @@
 import { Post, PostType, PostMetadata } from '../types/post';
 import { EventDetails, EventSpeaker, EventAgendaItem } from '../types/event';
+import { ethers } from 'ethers';
+import { getEthereumProvider } from './ethereum';
+import EventControllerABI from '../abi/EventController.json';
+import { getContractAddresses } from '../constants/contracts';
+import { blockchain, getCurrentChainId } from './blockchainUtils';
 
 /**
  * Validates event details and fills in missing fields with defaults
@@ -196,5 +201,325 @@ export const createSampleEventPost = (): Post => {
       likeCount: 75
     },
     metadata,
+  };
+};
+
+// Define event types
+export interface EventLocation {
+  type: 'PHYSICAL' | 'VIRTUAL' | 'HYBRID';
+  physical?: string;
+  virtual?: string;
+  address?: string;
+  coordinates?: {
+    latitude: string;
+    longitude: string;
+  };
+}
+
+export interface TicketType {
+  name: string;
+  price: string; // in wei
+  supply: number;
+  perWalletLimit: number;
+}
+
+export interface EventData {
+  title: string;
+  description: string;
+  startDate: number; // Unix timestamp
+  endDate: number; // Unix timestamp
+  location: EventLocation;
+  capacity: number;
+  ticketTypes: TicketType[];
+  organizer?: string;
+}
+
+/**
+ * Create a new event on the blockchain
+ * @param eventData The event data
+ * @returns The event ID
+ */
+export const createEvent = async (eventData: EventData): Promise<number> => {
+  try {
+    await blockchain.connect();
+      
+    // Get the current chain ID
+    const chainId = await getCurrentChainId();
+    console.log('Using chain ID for post creation:', chainId);
+    
+    // Get contract addresses for the current chain
+    const addresses = getContractAddresses(chainId);
+   
+    
+    // Get provider and signer
+    const provider = await blockchain.getProvider();
+    const signer = await blockchain.getSigner();
+    
+    if (!addresses.EVENT_CONTROLLER) {
+      throw new Error('Event controller address not configured');
+    }
+
+    const eventController = new ethers.Contract(
+      addresses.EVENT_CONTROLLER,
+      EventControllerABI,
+      signer
+    );
+
+    // Prepare metadata
+    const metadata = JSON.stringify({
+      title: eventData.title,
+      description: eventData.description,
+      startDate: eventData.startDate,
+      endDate: eventData.endDate,
+      location: eventData.location,
+      createdAt: Math.floor(Date.now() / 1000)
+    });
+
+    // Get the first ticket type for simplicity
+    // In a more complex implementation, you might want to handle multiple ticket types
+    const ticketType = eventData.ticketTypes[0] || { price: '0', supply: eventData.capacity };
+    
+    // Convert price to wei if it's not already
+    const price = typeof ticketType.price === 'string' && ticketType.price.startsWith('0x') 
+      ? ticketType.price 
+      : ethers.parseEther(String(ticketType.price || 0));
+
+    console.log(`Creating event with metadata: ${metadata}`);
+    console.log(`Max tickets: ${eventData.capacity}, Price: ${price}`);
+
+    // Call the contract
+    const tx = await eventController.createEvent(
+      metadata,
+      eventData.capacity,
+      price
+    );
+
+    console.log(`Transaction sent: ${tx.hash}`);
+    const receipt = await tx.wait();
+    console.log(`Transaction confirmed: ${receipt.transactionHash}`);
+
+    // Extract event ID from logs
+    const eventCreatedLog = receipt.logs.find(
+      (log: any) => log.topics[0] === ethers.id('EventCreated(uint256,address)')
+    );
+
+    if (!eventCreatedLog) {
+      throw new Error('Event creation transaction did not emit EventCreated log');
+    }
+
+    const eventId = parseInt(eventCreatedLog.topics[1], 16);
+    console.log(`Event created with ID: ${eventId}`);
+    
+    return eventId;
+  } catch (error) {
+    console.error('Error creating event:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get event details from the blockchain
+ * @param eventId The event ID
+ * @returns The event details
+ */
+export const getEvent = async (eventId: number): Promise<any> => {
+  try {
+    const provider = await getEthereumProvider();
+    if (!provider) {
+      throw new Error('No Ethereum provider available');
+    }
+    const chainId = await getCurrentChainId();
+    const addresses = getContractAddresses(chainId);
+    
+    if (!addresses.EVENT_CONTROLLER) {
+      throw new Error('Event controller address not configured');
+    }
+
+    const eventController = new ethers.Contract(
+      addresses.EVENT_CONTROLLER,
+      EventControllerABI,
+      provider
+    );
+
+    const eventData = await eventController.events(eventId);
+    
+    // Parse metadata
+    let metadata = {};
+    try {
+      metadata = JSON.parse(eventData.metadataURI);
+    } catch (e) {
+      console.warn(`Failed to parse event metadata: ${e}`);
+    }
+
+    return {
+      id: eventId,
+      ...metadata,
+      organizer: eventData.organizer,
+      maxTickets: eventData.maxTickets.toString(),
+      ticketsSold: eventData.ticketsSold.toString(),
+      price: eventData.price.toString(),
+      active: eventData.active
+    };
+  } catch (error) {
+    console.error(`Error getting event ${eventId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Purchase tickets for an event
+ * @param eventId The event ID
+ * @param amount The number of tickets to purchase
+ * @returns The transaction hash
+ */
+export const purchaseTickets = async (eventId: number, amount: number): Promise<string> => {
+  try {
+    const provider = await getEthereumProvider();
+    if (!provider) {
+      throw new Error('No Ethereum provider available');
+    }
+
+    const signer = provider.getSigner();
+    const chainId = await getCurrentChainId();
+    const addresses = getContractAddresses(chainId);
+    
+    if (!addresses.EVENT_CONTROLLER) {
+      throw new Error('Event controller address not configured');
+    }
+
+    const eventController = new ethers.Contract(
+      addresses.EVENT_CONTROLLER,
+      EventControllerABI,
+      signer
+    );
+
+    // Get event details to determine price
+    const eventData = await eventController.events(eventId);
+    const totalPrice = eventData.price.mul(amount);
+
+    const tx = await eventController.purchaseTickets(eventId, amount, {
+      value: totalPrice
+    });
+
+    console.log(`Transaction sent: ${tx.hash}`);
+    const receipt = await tx.wait();
+    console.log(`Transaction confirmed: ${receipt.transactionHash}`);
+
+    return receipt.transactionHash;
+  } catch (error) {
+    console.error(`Error purchasing tickets for event ${eventId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Cancel an event
+ * @param eventId The event ID
+ * @returns The transaction hash
+ */
+export const cancelEvent = async (eventId: number): Promise<string> => {
+  try {
+    const provider = await getEthereumProvider();
+    if (!provider) {
+      throw new Error('No Ethereum provider available');
+    }
+
+    const signer = provider.getSigner();
+    const chainId = await getCurrentChainId();
+    const addresses = getContractAddresses(chainId);
+    
+    if (!addresses.EVENT_CONTROLLER) {
+      throw new Error('Event controller address not configured');
+    }
+
+    const eventController = new ethers.Contract(
+      addresses.EVENT_CONTROLLER,
+      EventControllerABI,
+      signer
+    );
+
+    const tx = await eventController.cancelEvent(eventId);
+
+    console.log(`Transaction sent: ${tx.hash}`);
+    const receipt = await tx.wait();
+    console.log(`Transaction confirmed: ${receipt.transactionHash}`);
+
+    return receipt.transactionHash;
+  } catch (error) {
+    console.error(`Error canceling event ${eventId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Check if a user has tickets for an event
+ * @param eventId The event ID
+ * @param userAddress The user's address
+ * @returns The number of tickets the user has
+ */
+export const getTicketBalance = async (eventId: number, userAddress?: string): Promise<number> => {
+  try {
+    const provider = await getEthereumProvider();
+    if (!provider) {
+      throw new Error('No Ethereum provider available');
+    }
+
+    const chainId = await getCurrentChainId();  
+    const addresses = getContractAddresses(chainId);
+    
+    if (!addresses.EVENT_CONTROLLER) {
+      throw new Error('Event controller address not configured');
+    }
+
+    const eventController = new ethers.Contract(
+      addresses.EVENT_CONTROLLER,
+      EventControllerABI,
+      provider
+    );
+
+    // If no user address provided, get the connected wallet address
+    if (!userAddress) {
+      const signer = provider.getSigner();
+      userAddress = await signer.getAddress();
+    }
+
+    const balance = await eventController.balanceOf(userAddress, eventId);
+    return balance.toNumber();
+  } catch (error) {
+    console.error(`Error getting ticket balance for event ${eventId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Convert event data from form to blockchain format
+ * @param formData The form data
+ * @returns The event data in blockchain format
+ */
+export const prepareEventData = (formData: any): EventData => {
+  // Convert dates to Unix timestamps
+  const startDate = new Date(formData.startDate).getTime() / 1000;
+  const endDate = new Date(formData.endDate).getTime() / 1000;
+
+  // Prepare ticket types
+  const ticketTypes: TicketType[] = [{
+    name: 'Standard',
+    price: ethers.parseEther(String(formData.price || 0)).toString(),
+    supply: formData.capacity || 0,
+    perWalletLimit: formData.perWalletLimit || 1
+  }];
+
+  return {
+    title: formData.title || '',
+    description: formData.description || '',
+    startDate,
+    endDate,
+    location: formData.location || {
+      type: 'PHYSICAL',
+      physical: '',
+      address: ''
+    },
+    capacity: formData.capacity || 0,
+    ticketTypes
   };
 }; 

@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 
 import tribesRouter from './routes/tribes.js';
 import usersRouter from './routes/users.js';
-
+import ApiV1Router from './routes/api-v1.js';
 // Load environment variables
 dotenv.config();
 
@@ -26,7 +26,19 @@ app.use(express.urlencoded({ extended: false }));
 // Static files
 app.use(express.static(join(__dirname, '../dist')));
 
+// Add CORS headers
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
+    return res.status(200).json({});
+  }
+  next();
+});
+
 // API Routes
+app.use('/api', ApiV1Router);
 app.use('/api/tribes', tribesRouter);
 app.use('/api/users', usersRouter);
 

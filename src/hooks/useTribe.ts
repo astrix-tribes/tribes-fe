@@ -4,7 +4,7 @@ import { getPublicClient, getContracts } from '../config/contracts';
 import { JoinType, TribeConfig } from '../types/contracts';
 import { useWallet } from './useWallet';
 import { getCurrentChain } from '../constants/contracts';
-import { MONAD_DEVNET } from '../constants/networks';
+import { MONAD_TESTNET } from '../constants/networks';
 import { Tribe } from '../types/tribe';
 import { useTribesSDK } from '../contexts/TribesContext';
 
@@ -27,7 +27,7 @@ export const useTribe = () => {
       throw new Error('Wallet not connected');
     }
 
-    const chain = getCurrentChain(chainId ?? MONAD_DEVNET.id);
+    const chain = getCurrentChain(chainId ?? MONAD_TESTNET.id);
     const [account] = await walletClient.getAddresses();
 
     const hash = await walletClient.writeContract({
@@ -48,7 +48,7 @@ export const useTribe = () => {
       throw new Error('Wallet not connected');
     }
 
-    const chain = getCurrentChain(chainId ?? MONAD_DEVNET.id);
+    const chain = getCurrentChain(chainId ?? MONAD_TESTNET.id);
     const [account] = await walletClient.getAddresses();
 
     const hash = await walletClient.writeContract({
@@ -69,7 +69,7 @@ export const useTribe = () => {
       throw new Error('Wallet not connected');
     }
 
-    const chain = getCurrentChain(chainId ?? MONAD_DEVNET.id);
+    const chain = getCurrentChain(chainId ?? MONAD_TESTNET.id);
     const [account] = await walletClient.getAddresses();
 
     const hash = await walletClient.writeContract({

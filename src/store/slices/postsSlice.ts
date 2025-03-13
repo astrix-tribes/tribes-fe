@@ -125,7 +125,7 @@ export const createPost = createAsyncThunk(
     try {
       // Call the blockchain utility
       const postId = await createBlockchainPost(postData);
-      
+      console.log(`[createPost]: Post created with hash in PostSlice: ${postData}`);
       // Return the created post with ID
       return {
         id: postId,

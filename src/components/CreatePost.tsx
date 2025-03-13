@@ -5,6 +5,7 @@ interface CreatePostProps {
   isOpen: boolean;
   onClose: () => void;
   tribeId?: string; // Make tribeId optional for backward compatibility
+  onSuccess?: (postId: string) => void;
 }
 
 /**

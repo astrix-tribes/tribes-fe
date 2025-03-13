@@ -5,7 +5,7 @@ import {
   custom, 
   http 
 } from 'viem';
-import { MONAD_DEVNET } from '../constants/networks';
+import { MONAD_TESTNET } from '../constants/networks';
 
 declare global {
   interface Window {
@@ -101,7 +101,7 @@ export const getEthereumProvider = async () => {
 
 export const getPublicClient = () => {
   return createPublicClient({
-    chain: MONAD_DEVNET,
+    chain: MONAD_TESTNET,
     transport: http()
   });
 };
@@ -109,14 +109,14 @@ export const getPublicClient = () => {
 export const getWalletClient = () => {
   if (!window.ethereum) throw new Error('No ethereum provider found');
   return createWalletClient({
-    chain: MONAD_DEVNET,
+    chain: MONAD_TESTNET,
     transport: custom(window.ethereum)
   });
 };
 
 export function createWalletClientFromProvider(provider: any): WalletClient {
   return createWalletClient({
-    chain: MONAD_DEVNET,
+    chain: MONAD_TESTNET,
     transport: custom(provider)
   });
 } 
